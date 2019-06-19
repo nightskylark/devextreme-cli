@@ -1,9 +1,10 @@
 const spawn = require('child_process').spawn;
 
-module.exports = function(commandName, args, customConfig) {
-    const command = /^win/.test(process.platform) ? `${commandName}.cmd` : commandName;
+module.exports = function(commandName, args = [], customConfig = {}) {
+    const forceNoCmd = customConfig.forceNoCmd;
+    const command = /^win/.test(process.platform) && !forceNoCmd ? `${commandName}.cmd` : commandName;
     const config = {
-        stdio: 'inherit',
+        stdio: customConfig.silent ? 'ignore' : 'inherit',
         windowsVerbatimArguments: true
     };
 
@@ -11,7 +12,9 @@ module.exports = function(commandName, args, customConfig) {
         Object.assign(config, customConfig);
     }
 
-    console.log(`> ${command} ${args.join(' ')}`);
+    if(!customConfig.silent) {
+        console.log(`> ${command} ${args.join(' ')}`);
+    }
 
     return new Promise((resolve, reject) => {
         spawn(command, args, config).on('exit', (code) => {
